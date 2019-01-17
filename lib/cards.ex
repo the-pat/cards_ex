@@ -22,6 +22,38 @@ defmodule Cards do
     Enum.split(deck, hand_size)
   end
 
+  def save(deck, filename) do
+    binary = :erlang.term_to_binary(deck)
+
+    File.write(filename, binary)
+  end
+
+  def load({:ok, binary}) do
+    :erlang.binary_to_term(binary)
+  end
+
+  def load({:error, _}) do
+    "That file does not exist"
+  end
+
+  def load(filename) do
+    filename |>
+      File.read() |>
+      Cards.load()
+
+    ## same as above
+    #case File.read(filename) do
+    #  {:ok, binary} -> :erlang.binary_to_term binary
+    #  {:error, _} -> "That file does not exist"
+    #end
+  end
+
+  def create_hand(hand_size) do
+    Cards.create_deck() |>
+      Cards.shuffle() |>
+      Cards.deal(hand_size)
+  end
+
   def to_string({1, suit}) do
     Cards.to_string({"Ace", suit})
   end
@@ -36,6 +68,12 @@ defmodule Cards do
 
   def to_string({13, suit}) do
     Cards.to_string({"King", suit})
+  end
+
+  def to_string(deck) when is_list(deck) do
+    for card <- deck do
+      Cards.to_string(card)
+    end
   end
 
   def to_string({value, suit}) do
