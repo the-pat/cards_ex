@@ -4,6 +4,24 @@ defmodule Cards do
   """
 
   @doc """
+    Checks if the card exists within the deck
+
+  ## Examples
+
+      iex> deck = Cards.create_deck()
+      iex> Cards.contains?(deck, {1, "Spades"})
+      true
+
+      iex> deck = Cards.create_deck()
+      iex> Cards.contains?(deck, {nil, "Fake Card!"})
+      false
+
+  """
+  def contains?(deck, card) do
+    Enum.member?(deck, card)
+  end
+
+  @doc """
     Returns a list of tuples representing a deck of playing cards
   """
   def create_deck do
@@ -17,24 +35,21 @@ defmodule Cards do
   end
 
   @doc """
-    Returns a deck with the cards shuffled
-  """
-  def shuffle(deck) do
-    Enum.shuffle(deck)
-  end
-
-  @doc """
-    Checks if the card exists within the deck
+    Create a deck, shuffle the deck, and return a hand and the remainder of the deck
 
   ## Examples
 
-      iex> deck = Cards.create_deck()
-      iex> Cards.contains?(deck, {1, "Spades"})
-      true
-
+      iex> :rand.seed(:exsplus, {1, 2, 3})
+      iex> {hand, deck} = Cards.create_hand(3)
+      iex> hand
+      [{5, "Clubs"}, {4, "Clubs"}, {10, "Hearts"}]
+      iex> Enum.count(deck)
+      49
   """
-  def contains?(deck, card) do
-    Enum.member?(deck, card)
+  def create_hand(hand_size) do
+    Cards.create_deck() |>
+      Cards.shuffle() |>
+      Cards.deal(hand_size)
   end
 
   @doc """
@@ -47,25 +62,12 @@ defmodule Cards do
       iex> {hand, deck} = Cards.deal(deck, 1)
       iex> hand
       [{1, "Spades"}]
+      iex> Enum.count(deck)
+      51
 
   """
   def deal(deck, hand_size) do
     Enum.split(deck, hand_size)
-  end
-
-  @doc """
-    Store the deck on the local file system
-
-  ## Examples
-
-      iex> deck = Cards.create_deck()
-      iex> Cards.save(deck, "deck-o-cards")
-      :ok
-  """
-  def save(deck, filename) do
-    binary = :erlang.term_to_binary(deck)
-
-    File.write(filename, binary)
   end
 
   def load({:ok, binary}) do
@@ -92,18 +94,35 @@ defmodule Cards do
   end
 
   @doc """
-    Create a deck, shuffle the deck, and return a hand and the remainder of the deck
+    Store the deck on the local file system
 
   ## Examples
 
-      iex> {hand, deck} = Cards.create_hand(1)
-      iex> Enum.count(hand)
-      1
+      iex> deck = Cards.create_deck()
+      iex> Cards.save(deck, "deck-o-cards")
+      :ok
   """
-  def create_hand(hand_size) do
-    Cards.create_deck() |>
-      Cards.shuffle() |>
-      Cards.deal(hand_size)
+  def save(deck, filename) do
+    binary = :erlang.term_to_binary(deck)
+
+    File.write(filename, binary)
+  end
+
+  @doc """
+    Returns a deck with the cards shuffled
+
+    ## Examples
+
+        iex> :rand.seed(:exsplus, {1, 2, 3})
+        iex> deck = Cards.create_deck()
+        iex> deck = Cards.shuffle(deck)
+        iex> {hand, _} = Cards.deal(deck, 3)
+        iex> hand
+        [{5, "Clubs"}, {4, "Clubs"}, {10, "Hearts"}]
+
+  """
+  def shuffle(deck) do
+    Enum.shuffle(deck)
   end
 
   def to_string({1, suit}) do
@@ -129,6 +148,19 @@ defmodule Cards do
 
       iex> Cards.to_string({1, "Spades"})
       "Ace of Spades"
+
+      iex> Cards.to_string({11, "Hearts"})
+      "Jack of Hearts"
+
+      iex> Cards.to_string({12, "Clubs"})
+      "Queen of Clubs"
+
+      iex> Cards.to_string({13, "Diamonds"})
+      "King of Diamonds"
+
+      iex> Cards.to_string({3, "Hearts"})
+      "3 of Hearts"
+
   """
   def to_string({value, suit}) do
     "#{value} of #{suit}"
